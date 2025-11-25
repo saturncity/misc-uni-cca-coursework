@@ -1,0 +1,12 @@
+int main (int n_1) {
+    repeat {
+        print n_1;
+        print newline;
+        if ~(n_1 >=  128) then {
+            n_1 := ( ((n_1/2)*2) + 64 )
+        }
+        else {skip}
+    }
+    until (n_1==128);
+    n_1
+}

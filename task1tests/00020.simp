@@ -1,0 +1,7 @@
+int main()
+{
+    int a := (6 - 2);
+    print a;
+    print newline;
+    (6-2)
+}
