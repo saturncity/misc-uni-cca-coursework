@@ -59,10 +59,11 @@ public class SimpleLangInterpreter extends AbstractParseTreeVisitor<Integer> imp
 
     @Override
     public Integer visitVardec(SimpleLangParser.VardecContext ctx) {
-        // visitVardec should represent the parameter list of a function.
-        // TODO: Return the parameter identifiers; do not initialize or store anything.
-
-        throw new RuntimeException("visitVardec not implemented yet.");
+        // Vardec: (type Idfr (',' type Idfr)*)?
+        // Semantics: this returns parameter names, but since the interpreter
+        // only uses the parse tree directly, we simply return null.
+        // (The actual names are retrieved through ctx.Idfr())
+        return null;
     }
 
 
@@ -76,28 +77,37 @@ public class SimpleLangInterpreter extends AbstractParseTreeVisitor<Integer> imp
     @Override
     public Integer visitBody(SimpleLangParser.BodyContext ctx) {
         // visitBody should create and initialize all local variables before running expressions.
-        // TODO: Evaluate each (type Idfr := exp) declaration and insert the resulting binding into the current frame.
 
-        Integer returnValue = null;
-        List<SimpleLangParser.ExpContext> exps = ctx.ene().exp();
-        for (var exp : exps) {
-            returnValue = visit(exp);
+        // Initialize all local variables declared at the top of the body:
+        // (type Idfr := exp ;)
+        for (int i = 0; i < ctx.type().size(); i++) {
+            // each declaration corresponds to: type Idfr ':=' exp ';'
+            String name = ctx.Idfr(i).getText();
+            SimpleLangParser.ExpContext rhs = ctx.exp(i);
+
+            int value = visit(rhs);
+            frames.peek().put(name, value);
         }
-        return returnValue;
+
+        // Now evaluate the ENE expression sequence
+        Integer result = null;
+        for (var e : ctx.ene().exp()) {
+            result = visit(e);
+        }
+
+        return result;
 
     }
 
     @Override
     public Integer visitBlock(SimpleLangParser.BlockContext ctx) {
         // visitBlock should evaluate the block contents using the current function frame.
-        // TODO: Evaluate all expressions inside the block without creating a new scope.
 
-        Integer returnValue = null;
-        List<SimpleLangParser.ExpContext> exps = ctx.ene().exp();
-        for (var exp : exps) {
-            returnValue = visit(exp);
+        Integer result = null;
+        for (var e : ctx.ene().exp()) {
+            result = visit(e);
         }
-        return returnValue;
+        return result;
     }
 
     // Expressions
@@ -194,29 +204,38 @@ public class SimpleLangInterpreter extends AbstractParseTreeVisitor<Integer> imp
     public Integer visitUnaryExp(SimpleLangParser.UnaryExpContext ctx) {
         // visitUnaryExp should evaluate primary or apply unary negation/not to recursive unaryExp.
 
-        // Base case: primary expression
+        //
+        // Case 1: primaryExp → just evaluate it.
+        //
         if (ctx.primaryExp() != null) {
             return visit(ctx.primaryExp());
         }
 
-        // Recursive unary case: unop unaryExp
+        //
+        // Case 2: unop unaryExp → apply unary operator to child expression.
+        //
         SimpleLangParser.UnaryExpContext child = ctx.unaryExp();
-
-        // saftey check against infinite recursion
+        if (child == null) {
+            throw new RuntimeException("Invalid unaryExp: missing child");
+        }
         if (child == ctx) {
-            throw new RuntimeException("Malformed unaryExp: child == parent");
+            throw new RuntimeException("Malformed unaryExp: unaryExp recurses into itself");
         }
 
-        Integer val = visit(child);
+        // Evaluate the operand first (right‑associative)
+        int val = visit(child);
 
-        if (ctx.unop() instanceof SimpleLangParser.NegUnopContext) {
-            return -val;
-        }
-        if (ctx.unop() instanceof SimpleLangParser.NotUnopContext) {
-            return (val == 0) ? 1 : 0;
-        }
+        // Identify the operator text
+        String op = ctx.unop().getText();
 
-        throw new RuntimeException("Unknown unary operator");
+        switch (op) {
+            case "-":    // unary negation
+                return -val;
+            case "~":    // boolean NOT
+                return (val == 0) ? 1 : 0;
+            default:
+                throw new RuntimeException("Unknown unary operator: " + op);
+        }
     }
 
     @Override
@@ -238,9 +257,9 @@ public class SimpleLangInterpreter extends AbstractParseTreeVisitor<Integer> imp
         // visitAssignExpr should update a variable in the current frame and return unit.
         // TODO: Evaluate RHS, store into current frame, return null to represent unit.
 
-        SimpleLangParser.ExpContext rhs = ctx.exp();
-        frames.peek().replace(ctx.Idfr().getText(), visit(rhs));
-        return null;
+        Integer rhs = visit(ctx.exp());
+        frames.peek().put(ctx.Idfr().getText(), rhs);
+        return 0;   // unit is represented as 0 to avoid null arithmetic crashes
 
     }
 
@@ -257,29 +276,22 @@ public class SimpleLangInterpreter extends AbstractParseTreeVisitor<Integer> imp
         SimpleLangParser.VardecContext params = fun.vardec();
         SimpleLangParser.ArgsContext argsCtx = ctx.args();
 
-        Map<String, Integer> newFrame = new HashMap<>();
-
         int paramCount = (params == null ? 0 : params.Idfr().size());
         int argCount   = (argsCtx == null ? 0 : argsCtx.exp().size());
-
         if (paramCount != argCount) {
             throw new RuntimeException("Argument count mismatch calling: " + ctx.Idfr().getText());
         }
 
-        // Bind parameters
+        Map<String, Integer> frame = new HashMap<>();
+
         for (int i = 0; i < paramCount; i++) {
             String name = params.Idfr(i).getText();
             int value = visit(argsCtx.exp(i));
-            newFrame.put(name, value);
+            frame.put(name, value);
         }
 
-        // PUSH call frame
-        frames.push(newFrame);
-
-        // Execute function body
+        frames.push(frame);
         Integer result = visit(fun);
-
-        // POP call frame
         frames.pop();
 
         return result;
@@ -323,38 +335,50 @@ public class SimpleLangInterpreter extends AbstractParseTreeVisitor<Integer> imp
     @Override
     public Integer visitWhileExpr(SimpleLangParser.WhileExprContext ctx) {
         // visitWhileExpr should repeatedly evaluate body while condition is true; final result is unit.
-        // TODO: While cond != 0, run block; always return null.
-        return null;
+
+        while (visit(ctx.exp()) != 0) {
+            visit(ctx.block());
+        }
+        return 0;
     }
 
     @Override
     public Integer visitRepeatExpr(SimpleLangParser.RepeatExprContext ctx) {
         // visitRepeatExpr should execute block at least once, then loop until cond != 0; returns unit.
-        // TODO: Execute block once, then loop while condition == 0; return null.
-        return null;
+
+        do {
+            visit(ctx.block());
+        } while (visit(ctx.exp()) == 0);
+        return 0;
     }
 
     @Override
     public Integer visitPrintExpr(SimpleLangParser.PrintExprContext ctx) {
         // visitPrintExpr prints ints, space, or newline; result is unit.
 
-        SimpleLangParser.ExpContext exp = ctx.exp();
+        // Obtain primary expression if possible
+        SimpleLangParser.PrimaryExpContext prim =
+                ctx.exp()
+                        .logicExp().compareExp(0)
+                        .additiveExp(0).multiplicativeExp(0)
+                        .unaryExp(0).primaryExp();
 
-        if (((TerminalNode) exp.getChild(0)).getSymbol().getType() == SimpleLangParser.Space) {
-
+        // print space
+        if (prim instanceof SimpleLangParser.SpaceExprContext) {
             System.out.print(" ");
-
-        } else if (((TerminalNode) exp.getChild(0)).getSymbol().getType() == SimpleLangParser.NewLine) {
-
-            System.out.println();
-
-        } else {
-
-            System.out.print(visit(exp));
-
+            return 0;
         }
 
-        return null;
+        // print newline
+        if (prim instanceof SimpleLangParser.NewLineExprContext) {
+            System.out.println();
+            return 0;
+        }
+
+        // Otherwise print evaluated value
+        int val = visit(ctx.exp());
+        System.out.print(val);
+        return 0;
 
     }
 
@@ -362,21 +386,21 @@ public class SimpleLangInterpreter extends AbstractParseTreeVisitor<Integer> imp
     public Integer visitSpaceExpr(SimpleLangParser.SpaceExprContext ctx) {
         // visitSpaceExpr yields unit; printing handled by print expression.
 
-        return null;
+        return 0;
     }
 
     @Override
     public Integer visitNewLineExpr(SimpleLangParser.NewLineExprContext ctx) {
         // visitNewLineExpr yields unit.
 
-        return null;
+        return 0;
     }
 
     @Override
     public Integer visitSkipExpr(SimpleLangParser.SkipExprContext ctx) {
         // visitSkipExpr does nothing and returns unit.
 
-        return null;
+        return 0;
     }
 
     @Override
