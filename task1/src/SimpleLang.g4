@@ -75,7 +75,7 @@ args
     : exp (Comma exp)*
 ;
 
-// binary operators
+// binary operators -- technically unused
 binop
     : Eq              #EqBinop
     | Less            #LessBinop
@@ -156,7 +156,7 @@ UnitType : 'unit' ;
 
 // literals
 BoolLit : 'true' | 'false' ;
-IntLit : '0' | ('-'? [1-9][0-9]*) ;
+IntLit : '0' | [1-9][0-9]* ;
 
 // identifiers: start with a lowercase letter, followed by letters, digits, or underscores
 Idfr : [a-z][A-Za-z0-9_]* ;
