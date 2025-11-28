@@ -82,13 +82,7 @@ public class SimpleLangInterpreter extends AbstractParseTreeVisitor<Integer> imp
 
     }
 
-    /**
-     * Visits the program node. Should never be called as visitProgram handles execution.
-     *
-     * @param ctx the program context
-     * @return never returns
-     * @throws RuntimeException always thrown because this method should not be reached
-     */
+    // not used
     @Override
     public Integer visitProg(SimpleLangParser.ProgContext ctx) {
         throw new RuntimeException("Should not be here!");
@@ -105,25 +99,13 @@ public class SimpleLangInterpreter extends AbstractParseTreeVisitor<Integer> imp
         return visit(ctx.body());
     }
 
-    /**
-     * Visits a variable declaration node. Not used during interpretation as parameter
-     * information is accessed directly from the parse tree.
-     *
-     * @param ctx the variable declaration context
-     * @return null (not used during interpretation)
-     */
+    // not used
     @Override
     public Integer visitVardec(SimpleLangParser.VardecContext ctx) {
         return null;
     }
 
-    /**
-     * Visits a type node. Should never be evaluated at runtime.
-     *
-     * @param ctx the type context
-     * @return never returns
-     * @throws RuntimeException always thrown because types are not evaluated at runtime
-     */
+    // not used
     @Override
     public Integer visitType(SimpleLangParser.TypeContext ctx) {
         throw new RuntimeException("Should not be here!");
@@ -338,23 +320,13 @@ public class SimpleLangInterpreter extends AbstractParseTreeVisitor<Integer> imp
         }
     }
 
-    /**
-     * Visits a negation unary operator node. Not used as unary operations are handled in visitUnaryExp.
-     *
-     * @param ctx the negation unary operator context
-     * @return null (not used)
-     */
+    // not used
     @Override
     public Integer visitNegUnop(SimpleLangParser.NegUnopContext ctx) {
         return null;
     }
 
-    /**
-     * Visits a NOT unary operator node. Not used as unary operations are handled in visitUnaryExp.
-     *
-     * @param ctx the NOT unary operator context
-     * @return null (not used)
-     */
+    // not used
     @Override
     public Integer visitNotUnop(SimpleLangParser.NotUnopContext ctx) {
         return null;
@@ -617,133 +589,73 @@ public class SimpleLangInterpreter extends AbstractParseTreeVisitor<Integer> imp
 
     // Binary operators
 
-    /**
-     * Visits an equality binary operator node. Not used as operators are handled in expression visitors.
-     *
-     * @param ctx the equality operator context
-     * @return null (not used)
-     */
+    // not used
     @Override
     public Integer visitEqBinop(SimpleLangParser.EqBinopContext ctx) {
         return null;
     }
 
-    /**
-     * Visits a less-than binary operator node. Not used as operators are handled in expression visitors.
-     *
-     * @param ctx the less-than operator context
-     * @return null (not used)
-     */
+    // not used
     @Override
     public Integer visitLessBinop(SimpleLangParser.LessBinopContext ctx) {
         return null;
     }
 
-    /**
-     * Visits a greater-than binary operator node. Not used as operators are handled in expression visitors.
-     *
-     * @param ctx the greater-than operator context
-     * @return null (not used)
-     */
+    // not used
     @Override
     public Integer visitGreaterBinop(SimpleLangParser.GreaterBinopContext ctx) {
         return null;
     }
 
-    /**
-     * Visits a less-or-equal binary operator node. Not used as operators are handled in expression visitors.
-     *
-     * @param ctx the less-or-equal operator context
-     * @return null (not used)
-     */
+    // not used
     @Override
     public Integer visitLessEqBinop(SimpleLangParser.LessEqBinopContext ctx) {
         return null;
     }
 
-    /**
-     * Visits a greater-or-equal binary operator node. Not used as operators are handled in expression visitors.
-     *
-     * @param ctx the greater-or-equal operator context
-     * @return null (not used)
-     */
+    // not used
     @Override
     public Integer visitGreaterEqBinop(SimpleLangParser.GreaterEqBinopContext ctx) {
         return null;
     }
 
-    /**
-     * Visits a plus binary operator node. Not used as operators are handled in expression visitors.
-     *
-     * @param ctx the plus operator context
-     * @return null (not used)
-     */
+    // not used
     @Override
     public Integer visitPlusBinop(SimpleLangParser.PlusBinopContext ctx) {
         return null;
     }
 
-    /**
-     * Visits a minus binary operator node. Not used as operators are handled in expression visitors.
-     *
-     * @param ctx the minus operator context
-     * @return null (not used)
-     */
+    // not used
     @Override
     public Integer visitMinusBinop(SimpleLangParser.MinusBinopContext ctx) {
         return null;
     }
 
-    /**
-     * Visits a times binary operator node. Not used as operators are handled in expression visitors.
-     *
-     * @param ctx the times operator context
-     * @return null (not used)
-     */
+    // not used
     @Override
     public Integer visitTimesBinop(SimpleLangParser.TimesBinopContext ctx) {
         return null;
     }
 
-    /**
-     * Visits a division binary operator node. Not used as operators are handled in expression visitors.
-     *
-     * @param ctx the division operator context
-     * @return null (not used)
-     */
+    // not used
     @Override
     public Integer visitDivBinop(SimpleLangParser.DivBinopContext ctx) {
         return null;
     }
 
-    /**
-     * Visits an AND binary operator node. Not used as operators are handled in expression visitors.
-     *
-     * @param ctx the AND operator context
-     * @return null (not used)
-     */
+    // not used
     @Override
     public Integer visitAndBinop(SimpleLangParser.AndBinopContext ctx) {
         return null;
     }
 
-    /**
-     * Visits an OR binary operator node. Not used as operators are handled in expression visitors.
-     *
-     * @param ctx the OR operator context
-     * @return null (not used)
-     */
+    // not used
     @Override
     public Integer visitOrBinop(SimpleLangParser.OrBinopContext ctx) {
         return null;
     }
 
-    /**
-     * Visits an XOR binary operator node. Not used as operators are handled in expression visitors.
-     *
-     * @param ctx the XOR operator context
-     * @return null (not used)
-     */
+    // not used
     @Override
     public Integer visitXorBinop(SimpleLangParser.XorBinopContext ctx) {
         return null;
@@ -777,13 +689,13 @@ public class SimpleLangInterpreter extends AbstractParseTreeVisitor<Integer> imp
      * @throws RuntimeException if any type error or semantic constraint violation is found
      */
     private void typeCheckProgram(SimpleLangParser.ProgContext ctx, String[] args) {
-        // step 1: build function signatures and check for duplicates
+        // build function signatures and check for duplicates
         buildFunctionSignatures(ctx);
 
-        // step 2: check semantic constraints (main exists, correct signature, etc.)
+        // check semantic constraints (main exists, correct signature, etc.)
         checkSemanticConstraints(ctx, args);
 
-        // step 3: type check each function body
+        // type check each function body
         for (SimpleLangParser.DecContext dec : ctx.dec()) {
             typeCheckFunction(dec);
         }
