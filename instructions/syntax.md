@@ -1,7 +1,3 @@
-Here is your text cleanly formatted in Markdown.
-
----
-
 # Coursework: The Syntax of a Simple Programming Language
 
 Here we present the syntactic language specifications of the simple programming language for which you have to build the interpreter. The syntax is mainly reflected in the file `SimpleLang.g4` in the interpreter.

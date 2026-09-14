@@ -8,3 +8,15 @@
 /task1/src/SimpleLangParser.java
 /task1/src/SimpleLang.interp
 /task1/src/SimpleLangLexer.java
+
+# IntelliJ project files
+/.idea/
+*.iml
+
+# Gradle
+/.gradle/
+/build/
+/task1/build/
+
+# compiled output
+/out/

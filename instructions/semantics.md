@@ -1,7 +1,3 @@
-Here is your text cleanly formatted in Markdown.
-
----
-
 # Coursework: The Semantics of the Simple Programming Language
 (Interpretation and Typing Rules)
 
